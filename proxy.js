@@ -15,7 +15,7 @@ var Store = {}
 
 module.exports = function(opts) {
 	opts || (opts = {})
-	opts.maxDuration || (opts.cacheDuration = 3600)
+	opts.cacheDuration || (opts.cacheDuration = 60 * 60 * 24) // 24h
 
 	function proxy(req, res) {
 		if(!req.query.entity || !isUrl(req.query.entity))
@@ -32,7 +32,7 @@ module.exports = function(opts) {
 				else {
 					if(response.headers.etag) {
 						Store[req.query.entity] = {
-							ts: Date.now(),
+							ts: Math.floor(Date.now() / 1000),
 							etag: response.headers.etag,
 							url: response.url,
 							meta: meta
@@ -44,7 +44,7 @@ module.exports = function(opts) {
 		}
 
 		function validateCache() {
-			var elapsed = Date.now() - store.ts
+			var elapsed = Math.floor(Date.now() / 1000) - store.ts
 			if(elapsed > opts.maxDuration) return requestMeta()
 
 			var req = hyperquest.get(store.url)
@@ -56,7 +56,7 @@ module.exports = function(opts) {
 			req.on('response', function(resp) {
 				response = resp
 				if(resp.statusCode === 304) {
-					store.ts = Date.now()
+					store.ts = Math.floor(Date.now() / 1000)
 					res.json(200, store.meta)
 				}
 			})
