@@ -16,6 +16,7 @@ var Store = {}
 module.exports = function(opts) {
 	opts || (opts = {})
 	opts.cacheDuration || (opts.cacheDuration = 60 * 60 * 24) // 24h
+	opts.allowForce || (opts.allowForce = true)
 
 	function proxy(req, res) {
 		if(!req.query.entity || !isUrl(req.query.entity))
@@ -23,7 +24,7 @@ module.exports = function(opts) {
 				{ error: 'missing / invalid entity query parameter' })
 
 		var store = Store[req.query.entity] // already in cache?
-		if(!store) requestMeta()
+		if(!store || (opts.allowForce && req.query.force)) requestMeta()
 		else validateCache()
 
 		function requestMeta() {
