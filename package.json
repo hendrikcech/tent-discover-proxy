@@ -3,10 +3,21 @@
   "version": "0.1.0",
   "description": "Express middleware which proxies Tent discover requests",
   "main": "proxy.js",
+  "keywords": [
+    "tent",
+    "discover"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hendrikcech/tent-discover-proxy.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Hendrik Cech",
+  "author": {
+    "name": "Hendrik Cech",
+    "email": "hendrik.cech@gmail.com"
+  },
   "license": "MIT",
   "dependencies": {
     "tent-discover": "~0.3.0",
