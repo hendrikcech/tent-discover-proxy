@@ -38,6 +38,7 @@ module.exports = function(opts) {
 							url: response.url,
 							meta: meta
 						}
+						setNewTimeout()
 					}
 					res.json(200, meta)
 				}
@@ -45,24 +46,22 @@ module.exports = function(opts) {
 		}
 
 		function validateCache() {
-			var elapsed = Math.floor(Date.now() / 1000) - store.ts
-			if(elapsed > opts.maxDuration) return requestMeta()
+			var cacheReq = hyperquest.get(store.url)
+			cacheReq.setHeader('If-None-Match', store.etag)
 
-			var req = hyperquest.get(store.url)
-			req.setHeader('If-None-Match', store.etag)
-
-			req.on('error', onError)
+			cacheReq.on('error', onError)
 
 			var response
-			req.on('response', function(resp) {
+			cacheReq.on('response', function(resp) {
 				response = resp
 				if(resp.statusCode === 304) {
 					store.ts = Math.floor(Date.now() / 1000)
+					setNewTimeout()
 					res.json(200, store.meta)
 				}
 			})
 
-			req.pipe(concat(function(body) {
+			cacheReq.pipe(concat(function(body) {
 				if(response.statusCode === 304) return
 				if(response.statusCode !== 200)
 					return onError(response.statusCode)
@@ -74,6 +73,15 @@ module.exports = function(opts) {
 				delete Store[req.query.entity]
 				res.json(500, { error: err })
 			}
+		}
+
+		function setNewTimeout() {
+			var store = Store[req.query.entity]
+			if(store.timeout) clearTimeout(store.timeout)
+			store.timeout = setTimeout(function() {
+				console.log('delete!')
+				delete Store[req.query.entity]
+			}, opts.cacheDuration * 1000)
 		}
 	}
 
